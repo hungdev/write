@@ -52,7 +52,6 @@ const OPTIONS: monaco.editor.IStandaloneEditorConstructionOptions = {
   smoothScrolling: true,
   snippetSuggestions: "none",
   suggestOnTriggerCharacters: false,
-  value: "",
   wordBasedSuggestions: false,
   wordWrap: "bounded",
   scrollbar: {
@@ -74,15 +73,29 @@ export const useEditorCreate = (params: Params): void => {
 
   useEffect(() => {
     const container = containerRef.current;
-    if (container === null) throw Error("`container` is null");
+    if (!container) throw Error("`container` is null");
 
     createEnv();
+
+    // Lấy nội dung từ localStorage
+    const savedContent = localStorage.getItem("editorContent") || "";
+
+    // Khởi tạo editor với nội dung từ localStorage
     const editor = monaco.editor.create(container, {
       ...OPTIONS,
-      // value: SAMPLE_TAILWIND,
-      value: "",
+      value: savedContent,
     });
+
     setEditor(editor);
+
+    // Lắng nghe sự kiện thay đổi nội dung và lưu vào localStorage
+    const model = editor.getModel();
+    if (model) {
+      model.onDidChangeContent(() => {
+        const newValue = model.getValue();
+        localStorage.setItem("editorContent", newValue);
+      });
+    }
 
     return () => {
       setEditor(null);
